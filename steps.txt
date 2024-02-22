@@ -1,0 +1,1 @@
+python3 lncSVM.py -c input.fa --model modelname_model.sav -o output.csv

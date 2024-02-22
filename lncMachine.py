@@ -87,7 +87,10 @@ def main():
 
 			data_dict=initialize_dataFrame()
 			data_dict=print_features(options.coding_file, data_dict, "coding")
-			dataFrame=pd.DataFrame(data=data_dict)
+			# print(data_dict)
+			dataFrame=pd.DataFrame.from_dict(data_dict, orient='index').transpose()
+			# dataFrame= dataFrame.transpose()
+			# print(dataFrame.head())
 
 		if options.prediction_model: coding_prediction(dataFrame, options.prediction_model, options.output_file)
 		else: coding_prediction_all(dataFrame)
@@ -96,8 +99,8 @@ def main():
 def build_prediction_model(dataFrame,output_file):
 #	selected=[col for col in dataFrame.columns if (("class" not in col) and ("readID" not in col))]
 	selected=[col for col in dataFrame.columns if (("class" not in col) and ("readID" not in col) and ("proba" not in col))]
-	X = data[selected]
-	Y = data["class"]
+	X = dataFrame[selected]
+	Y = dataFrame["class"]
 	
 	prediction_model=RandomForestClassifier(random_state=1, n_jobs=-1)
 
@@ -117,14 +120,17 @@ def coding_prediction(dataFrame, prediction_model, output_file):
 
 	clf = pickle.load(open(prediction_model, 'rb'))
 	y_pred=clf.predict(X_test)
-	
-	print("%20s | Accuracy: %0.2f%% |  " % (prediction_model, 100*clf.score(X_test,y_test)))
-	print(confusion_matrix(y_test, y_pred))
-	print(classification_report(y_test,y_pred))
+	# print("\n Y_pred:")
+	# print(y_pred[:5])
+	# print("\n X_test:")
+	# print(X_test.head())
+	# print("\n")
+
+	# print("%20s | Accuracy: %0.2f%% |  " % (prediction_model, 100*clf.score(X_test,y_test)))
+	# print(confusion_matrix(y_test, y_pred))
+	# print(classification_report(y_test,y_pred))
 #	print(roc_auc_score(y_test,y_pred))
 	dataFrame["class"]=y_pred
-	y_proba=clf.predict_proba(X_test)[:, 1]
-	dataFrame["proba"]=y_proba
 	dataFrame.to_csv(output_file,sep='\t',index=False)
     
 def build_prediction_model_all(dataFrame, output_file):
@@ -203,8 +209,6 @@ def coding_prediction_all(dataFrame):
 # 		print(classification_report(y_test,y_pred))
 #		print(roc_auc_score(y_test,y_pred))
 		dataFrame["class"]=y_pred
-		y_proba=clf.predict_proba(X_test)[:, 1]
-		dataFrame["proba"]=y_proba
 		
 		dataFrame.to_csv(name+'_out.csv',sep='\t',index=False)
 
@@ -213,10 +217,10 @@ def coding_prediction_all(dataFrame):
 def initialize_dataFrame():
 #	header=["readID", "class", "len", "orflen", "orfcov", "pI", "ORF_integrity", "fickett", "fickett_cds", "Hexamer", "GC%", "A", "T", "G", "C", "AAA", "AAT", "AAG", "AAC", "ATA", "ATT", "ATG", "ATC", "AGA", "AGT", "AGG", "AGC", "ACA", "ACT", "ACG", "ACC", "TAA", "TAT", "TAG", "TAC", "TTA", "TTT", "TTG", "TTC", "TGA", "TGT", "TGG", "TGC", "TCA", "TCT", "TCG", "TCC", "GAA", "GAT", "GAG", "GAC", "GTA", "GTT", "GTG", "GTC", "GGA", "GGT", "GGG", "GGC", "GCA", "GCT", "GCG", "GCC", "CAA", "CAT", "CAG", "CAC", "CTA", "CTT", "CTG", "CTC", "CGA", "CGT", "CGG", "CGC", "CCA", "CCT", "CCG", "CCC", "AA", "AT", "AG", "AC", "TA", "TT", "TG", "TC", "GA", "GT", "GG", "GC", "CA", "CT", "CG", "CC"]
 	header=["readID", "class", "len", "orflen", "pI", "GC%", "proba"]
-	data_dict={}
-	for h in header: 
-#		if h != "readID": data_dict[h]=[]
-		data_dict[h]=[]
+	data_dict={"readID":[], "class":[], "len":[], "orflen":[], "pI":[], "GC%":[], "proba":[]}
+# 	for h in header: 
+# #		if h != "readID": data_dict[h]=[]
+# 		data_dict[h]=[]
 
 	return data_dict
 
@@ -225,26 +229,27 @@ def print_features(fasta_file, data_dict, annot):
 	elif annot=="noncoding": annot=0
 
 	for seq in SeqIO.parse(fasta_file,"fasta"):
-	  seqid = seq.id
-	  seqDNA=seq.seq
-	  seqDNA=seqDNA.upper()
-	  seqlen=len(seqDNA)
-	  seqCDS,orf_integrity = FindCDS(seqDNA).longest_orf()
+		seqid = seq.id
+		seqDNA=seq.seq
+		seqDNA=seqDNA.upper()
+		seqlen=len(seqDNA)
+		seqCDS,orf_integrity = FindCDS(seqDNA).longest_orf()
 	#  seqProt=PA(str(Seq(seqCDS).translate().strip("*")))
-	  Prot=PA(str(seqCDS.translate().strip("*")))
-	  seqProt=Prot.sequence
-	  orflen=len(seqProt)
-	  if len(seqProt)> 0: isoelectric_point = Prot.isoelectric_point()
-	  else: isoelectric_point = 0.0	  
-	  gc=(seqDNA.count("G")+seqDNA.count("C"))*100.0/len(seqDNA)
-	  
-	  data_dict["readID"].append(seqid)
-	  data_dict["class"].append(annot)
-	  data_dict["len"].append(seqlen)
-	  data_dict["orflen"].append(orflen)
-	  data_dict["pI"].append(isoelectric_point)
-	  data_dict["GC%"].append(gc)
-	  
+		Prot=PA(str(seqCDS.translate().strip("*")))
+		seqProt=Prot.sequence
+		orflen=len(seqProt)
+		if len(seqProt)> 0: isoelectric_point = Prot.isoelectric_point()
+		else: isoelectric_point = 0.0	  
+		gc=(seqDNA.count("G")+seqDNA.count("C"))*100.0/len(seqDNA)
+		
+		data_dict["readID"].append(seqid)
+		data_dict["class"].append(annot)
+		data_dict["len"].append(seqlen)
+		data_dict["orflen"].append(orflen)
+		data_dict["pI"].append(isoelectric_point)
+		data_dict["GC%"].append(gc)
+	print("/n***HelloWorld***")
+	print(len(data_dict))
 	return data_dict
 
 
