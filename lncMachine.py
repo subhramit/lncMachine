@@ -87,7 +87,7 @@ def main():
 
 			data_dict=initialize_dataFrame()
 			data_dict=print_features(options.coding_file, data_dict, "coding")
-			dataFrame=pd.DataFrame(data=data_dict)
+			dataFrame=pd.DataFrame.from_dict(data_dict, orient='index').transpose()
 
 		if options.prediction_model: coding_prediction(dataFrame, options.prediction_model, options.output_file)
 		else: coding_prediction_all(dataFrame)
@@ -96,8 +96,8 @@ def main():
 def build_prediction_model(dataFrame,output_file):
 #	selected=[col for col in dataFrame.columns if (("class" not in col) and ("readID" not in col))]
 	selected=[col for col in dataFrame.columns if (("class" not in col) and ("readID" not in col) and ("proba" not in col))]
-	X = data[selected]
-	Y = data["class"]
+	X = dataFrame[selected]
+	Y = dataFrame["class"]
 	
 	prediction_model=RandomForestClassifier(random_state=1, n_jobs=-1)
 
@@ -213,7 +213,7 @@ def coding_prediction_all(dataFrame):
 def initialize_dataFrame():
 #	header=["readID", "class", "len", "orflen", "orfcov", "pI", "ORF_integrity", "fickett", "fickett_cds", "Hexamer", "GC%", "A", "T", "G", "C", "AAA", "AAT", "AAG", "AAC", "ATA", "ATT", "ATG", "ATC", "AGA", "AGT", "AGG", "AGC", "ACA", "ACT", "ACG", "ACC", "TAA", "TAT", "TAG", "TAC", "TTA", "TTT", "TTG", "TTC", "TGA", "TGT", "TGG", "TGC", "TCA", "TCT", "TCG", "TCC", "GAA", "GAT", "GAG", "GAC", "GTA", "GTT", "GTG", "GTC", "GGA", "GGT", "GGG", "GGC", "GCA", "GCT", "GCG", "GCC", "CAA", "CAT", "CAG", "CAC", "CTA", "CTT", "CTG", "CTC", "CGA", "CGT", "CGG", "CGC", "CCA", "CCT", "CCG", "CCC", "AA", "AT", "AG", "AC", "TA", "TT", "TG", "TC", "GA", "GT", "GG", "GC", "CA", "CT", "CG", "CC"]
 	header=["readID", "class", "len", "orflen", "pI", "GC%", "proba"]
-	data_dict={}
+	data_dict={"readID":[], "class":[], "len":[], "orflen":[], "pI":[], "GC%":[], "proba":[]}
 	for h in header: 
 #		if h != "readID": data_dict[h]=[]
 		data_dict[h]=[]
