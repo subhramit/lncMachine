@@ -3,19 +3,18 @@ LncRNA prediction tool for plants
 
 lncMachine requires python3 or newer.
 
-Prediction models was constructed using the sklearn module in version 0.22. Prebuilt models were provided as long as the sklearm module (version 0.22) is used.\n
+Prediction models was constructed using the sklearn module in version 0.22. Prebuilt models were provided as long as the sklearm module (version 0.22) is used.
+
+## Required python packages:
+	Bio
+	optparse
+	numpy
+	pandas
+	sklearn
+	pickle
 
 
-	required python packages:
-		Bio
-		optparse
-		numpy
-		pandas
-		sklearn
-		pickle
-
-
-Program Usage
+## Program Usage
 
 	Options:
 	--version             show program's version number and exit  
@@ -46,25 +45,30 @@ Program Usage
 --------------------
 To build a Random Forest prediction model from a coding and a noncoding data (FASTA):
 
-	python3 lncMachine.py -c coding.fasta -n noncoding.fasta --train 
+```bash
+python3 lncMachine.py -c coding.fasta -n noncoding.fasta --train
+```
 
 
 --------------------
 To build prediction models using nine machine learning algorithms:
 
-	python3 lncMachine.py -c coding.fasta -n noncoding.fasta --train --all
-
+```bash
+python3 lncMachine.py -c coding.fasta -n noncoding.fasta --train --all
+```
 
 --------------------
 To build a Random Forest prediction model from a CSV file containing at least two classes:
 
-	python3 lncMachine.py -i features.csv --train
-
+```bash
+python3 lncMachine.py -i features.csv --train
+```
 
 --------------------
 To predict coding probability from a FASTA file:
 
-	python3 lncMachine.py -c coding.fasta --model prebuiltin_model.sav
-
+```bash
+python3 lncMachine.py -c coding.fasta --model prebuiltin_model.sav
+```
 
 --------------------
